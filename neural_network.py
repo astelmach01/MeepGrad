@@ -1,6 +1,5 @@
+import random
 from engine import Value
-import random 
-from typing import List
 
 class Neuron:
 
@@ -17,6 +16,9 @@ class Neuron:
         total += self.bias
         return total.tanh()
 
+    def parameters(self):
+        return self.weights + [self.bias]
+
 class Layer:
 
     def __init__(self, n_in, n_out) -> None:
@@ -24,6 +26,14 @@ class Layer:
 
     def __call__(self, x):
         return [n(x) for n in self.neurons]
+
+    def parameters(self):
+        result = []
+
+        for neuron in self.neurons:
+            result.extend(neuron.parameters())
+
+        return result
 
 
 class MLP:
@@ -37,3 +47,38 @@ class MLP:
             x = layer(x)
 
         return x[0]
+
+    def parameters(self):
+        result = []
+
+        for layer in self.layers:
+            result.extend(layer.parameters())
+
+        return result
+
+    def zero_grad(self):
+        for parameter in self.parameters():
+            parameter.grad = 0.0
+
+    def optimize(self, X, y_true, epochs: int = 100, alpha: float = .001, debug: bool = True):
+
+        for epoch in range(epochs):
+            # forward pass
+            y_preds = [self(x) for x in X]
+
+            
+            # calculate loss
+            loss = sum([(y_pred - y_true) ** 2 for y_true, y_pred in zip(y_true, y_preds)])
+
+            if debug:
+                print(f"Epoch {epoch}. Loss: {loss.data}")
+
+            # calculate gradients
+            loss.backward_pass()
+
+            # take a step in the gradient
+            for parameter in self.parameters():
+                parameter.data = parameter.data - alpha * parameter.grad
+
+            # zero grad
+            self.zero_grad()

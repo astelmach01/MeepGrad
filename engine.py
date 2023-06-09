@@ -3,7 +3,7 @@ import math
 class Value:
 
     def __init__(self, data, children=(), op=''):
-        self.data = data
+        self.data = float(data)
         self.grad = 0.0
         self.backward = lambda: None
         self.prev = set(children)
@@ -113,3 +113,4 @@ class Value:
 
         for node in reversed(topo):
             node.backward()
+        
